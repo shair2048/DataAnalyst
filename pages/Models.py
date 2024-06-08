@@ -20,6 +20,8 @@ global data
 target_variable = None
 independent_variable = None
 data = None
+columns = None
+btn_choose_csv_file = None
 
 linear_regression, logicstic_regression, knn = st.tabs(["Linear Regression", "Logicstic Regression", "KNN"])
 
@@ -31,13 +33,19 @@ with st.sidebar:
         data = pd.read_csv(file)
         
         columns = list(data.columns)
+        # target_variable = st.selectbox('Select target variable', columns)
+        # independent_variable = st.multiselect('Select independent variable', columns)
+
+    # btn_choose_csv_file = st.button("Excution")
+
+def choose_variable(target_variable, independent_variable, btn_choose_csv_file):
+    if columns is not None:
         target_variable = st.selectbox('Select target variable', columns)
         independent_variable = st.multiselect('Select independent variable', columns)
-
-    btn_choose_csv_file = st.button("Excution")
+        btn_choose_csv_file = st.button("Excution")
 
 with st.container():
-    if btn_choose_csv_file:
+    # if btn_choose_csv_file:
         # with dataframe_info:
         #     original_data = data
         #     st.dataframe(original_data)
@@ -85,7 +93,17 @@ with st.container():
             # # Hiển thị biểu đồ
             # st.plotly_chart(fig)
             
-        with linear_regression:
+    with linear_regression:
+        # choose_variable(target_variable, independent_variable, btn_choose_csv_file)
+
+        if columns is not None:
+            target_variable = st.selectbox('Select target variable', columns, index=None)
+            independent_variable = st.multiselect('Select independent variable', columns)
+            btn_choose_csv_file = st.button("Excution")
+
+        # st.write(independent_variable, target_variable)
+        
+        if btn_choose_csv_file:
             if len(independent_variable) == 1:
                 # st.scatter_chart(data[[independent_variable[0], target_variable]])
                 
@@ -101,17 +119,6 @@ with st.container():
                 st.write("Coefficient:", model.coef_)
                 st.write("Intercept:", model.intercept_)
             elif len(independent_variable) == 2: 
-                # fig = plt.figure()
-                # ax = fig.add_subplot(111, projection='3d')
-                # ax.scatter(data[independent_variable[0]], data[independent_variable[1]], data[target_variable], c=data[target_variable], cmap='viridis')
-                
-                # ax.set_xlabel(independent_variable[0])
-                # ax.set_ylabel(independent_variable[1])
-                # ax.set_zlabel(target_variable)
-                
-                # plt.show()
-                # st.pyplot(fig)
-                
                 # Tạo mô hình hồi quy tuyến tính
                 model = LinearRegression()
                 X = data[independent_variable].values.reshape(-1, 2)
@@ -140,31 +147,35 @@ with st.container():
                 st.write("Intercept:", model.intercept_)
             else:
                 st.warning("Target variable or Independent variable have not been selected.")
+        
+    with logicstic_regression:
+        st.header("Logicstic Regression")
+        # choose_variable()
             
-        with logicstic_regression:
-            st.header("Logicstic Regression")
-            
-        with knn:
-            st.header("KNN")
-            # X_train, X_test, y_train, y_test = train_test_split(data, target_variable, test_size=0.2, random_state=42)
-            
-            # knn = KNeighborsClassifier(n_neighbors=3) # K=3
+        # if btn_choose_csv_file:
+        #     st.header("Logicstic Regression")
+        
+    with knn:
+        st.header("KNN")
+        # X_train, X_test, y_train, y_test = train_test_split(data, target_variable, test_size=0.2, random_state=42)
+        
+        # knn = KNeighborsClassifier(n_neighbors=3) # K=3
 
-            # # Huấn luyện mô hình
-            # knn.fit(X_train, y_train)
-            
-            # scaler = StandardScaler()
-            # scaler.fit(X_train)
-            # X_test_scaled = scaler.transform(X_test)  # Scaled test data
-            # y_pred = model.predict(X_test_scaled)     # Predicted labels
-            
-            # # Tính toán ma trận nhầm lẫn (confusion matrix)
-            # conf_matrix = confusion_matrix(y_test, y_pred)
-            
-            # # Vẽ heatmap
-            # fig, ax = plt.subplots()
-            # sb.heatmap(conf_matrix, annot=True, cmap='coolwarm', fmt='d')
-            # ax.set_xlabel('Predicted Label')
-            # ax.set_ylabel('True Label')
-            # ax.set_title('Confusion Matrix')
-            # st.pyplot(fig)
+        # # Huấn luyện mô hình
+        # knn.fit(X_train, y_train)
+        
+        # scaler = StandardScaler()
+        # scaler.fit(X_train)
+        # X_test_scaled = scaler.transform(X_test)  # Scaled test data
+        # y_pred = model.predict(X_test_scaled)     # Predicted labels
+        
+        # # Tính toán ma trận nhầm lẫn (confusion matrix)
+        # conf_matrix = confusion_matrix(y_test, y_pred)
+        
+        # # Vẽ heatmap
+        # fig, ax = plt.subplots()
+        # sb.heatmap(conf_matrix, annot=True, cmap='coolwarm', fmt='d')
+        # ax.set_xlabel('Predicted Label')
+        # ax.set_ylabel('True Label')
+        # ax.set_title('Confusion Matrix')
+        # st.pyplot(fig)
