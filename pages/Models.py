@@ -21,7 +21,7 @@ target_variable = None
 independent_variable = None
 data = None
 
-dataframe_info, linear_regression, logicstic_regression, knn = st.tabs(["Dataframe Info", "Linear Regression", "Logicstic Regression", "KNN"])
+linear_regression, logicstic_regression, knn = st.tabs(["Linear Regression", "Logicstic Regression", "KNN"])
 
 with st.sidebar:
     file = st.file_uploader("Choose CSV file!", type="csv")
@@ -33,50 +33,44 @@ with st.sidebar:
         columns = list(data.columns)
         target_variable = st.selectbox('Select target variable', columns)
         independent_variable = st.multiselect('Select independent variable', columns)
-        
-    # st.write("Select model")
-    # models = st.selectbox(
-    #     'Select model',
-    #     ('Linear Regression', 'Logicstic Regression')
-    # )
 
     btn_choose_csv_file = st.button("Excution")
 
 with st.container():
     if btn_choose_csv_file:
-        with dataframe_info:
-            original_data = data
-            st.dataframe(original_data)
+        # with dataframe_info:
+        #     original_data = data
+        #     st.dataframe(original_data)
             
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                info_df = pd.DataFrame({
-                    "Data Type": data.dtypes,
-                    "NaN Count": data.isna().sum()
-                })
+        #     col1, col2, col3 = st.columns(3)
+        #     with col1:
+        #         info_df = pd.DataFrame({
+        #             "Data Type": data.dtypes,
+        #             "NaN Count": data.isna().sum()
+        #         })
 
-                st.dataframe(info_df)
+        #         st.dataframe(info_df)
 
-            with col2:
-                btn_rename_col = st.button("Save Change")
-                btn_clean_data = st.button("Clean Data")
-                btn_change_data_type = st.button("Change Data Type")
-                # btn_download_file = st.button("Download File Cleaned")
-                st.download_button(
-                    label="Download File Cleaned",  
-                    data=file, 
-                    file_name="large_df.csv",
-                    mime="text/csv",
-                )
+        #     with col2:
+        #         btn_rename_col = st.button("Save Change")
+        #         btn_clean_data = st.button("Clean Data")
+        #         btn_change_data_type = st.button("Change Data Type")
+        #         # btn_download_file = st.button("Download File Cleaned")
+        #         st.download_button(
+        #             label="Download File Cleaned",  
+        #             data=file, 
+        #             file_name="large_df.csv",
+        #             mime="text/csv",
+        #         )
                 
-                st.data_editor(data)
+        #         st.data_editor(data)
         
-        # if btn_rename_col:
-        #     st.data_editor(data)
+        # # if btn_rename_col:
+        # #     st.data_editor(data)
 
-        if btn_clean_data:
-            cleaned_data = original_data.dropna()
-            st.dataframe(cleaned_data)
+        # if btn_clean_data:
+        #     cleaned_data = original_data.dropna()
+        #     st.dataframe(cleaned_data)
             
         
             
