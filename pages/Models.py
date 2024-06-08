@@ -13,8 +13,8 @@ from sklearn.neighbors import KNeighborsClassifier
 import plotly.express as px
 # import plotly.graph_objects as go
 
-global target_variable
-global independent_variables
+# global target_variable
+# global independent_variables
 global data
 
 target_variable = None
@@ -33,16 +33,13 @@ with st.sidebar:
         data = pd.read_csv(file)
         
         columns = list(data.columns)
-        # target_variable = st.selectbox('Select target variable', columns)
-        # independent_variable = st.multiselect('Select independent variable', columns)
 
-    # btn_choose_csv_file = st.button("Excution")
-
-def choose_variable(target_variable, independent_variable, btn_choose_csv_file):
+def choose_variable(key_prefix):
+    global target_variable, independent_variable, btn_choose_csv_file
     if columns is not None:
-        target_variable = st.selectbox('Select target variable', columns)
-        independent_variable = st.multiselect('Select independent variable', columns)
-        btn_choose_csv_file = st.button("Excution")
+        target_variable = st.selectbox('Select target variable', columns, index=None, key=f'{key_prefix}_target')
+        independent_variable = st.multiselect('Select independent variable', columns, key=f'{key_prefix}_independent')
+        btn_choose_csv_file = st.button("Excution", key=f'{key_prefix}_btn')
 
 with st.container():
     # if btn_choose_csv_file:
@@ -94,19 +91,10 @@ with st.container():
             # st.plotly_chart(fig)
             
     with linear_regression:
-        # choose_variable(target_variable, independent_variable, btn_choose_csv_file)
+        choose_variable('linear_regression')
 
-        if columns is not None:
-            target_variable = st.selectbox('Select target variable', columns, index=None)
-            independent_variable = st.multiselect('Select independent variable', columns)
-            btn_choose_csv_file = st.button("Excution")
-
-        # st.write(independent_variable, target_variable)
-        
         if btn_choose_csv_file:
             if len(independent_variable) == 1:
-                # st.scatter_chart(data[[independent_variable[0], target_variable]])
-                
                 model = LinearRegression()
                 X = data[independent_variable[0]].values.reshape(-1, 1)
                 y = data[target_variable].values
@@ -149,11 +137,11 @@ with st.container():
                 st.warning("Target variable or Independent variable have not been selected.")
         
     with logicstic_regression:
-        st.header("Logicstic Regression")
-        # choose_variable()
+        # st.header("Logicstic Regression")
+        choose_variable('logicstic_regression')
             
-        # if btn_choose_csv_file:
-        #     st.header("Logicstic Regression")
+        if btn_choose_csv_file:
+            st.header("Logicstic Regression")
         
     with knn:
         st.header("KNN")
