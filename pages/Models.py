@@ -77,9 +77,7 @@ with st.container():
         if btn_clean_data:
             cleaned_data = original_data.dropna()
             st.dataframe(cleaned_data)
-            
-        
-            
+
             # plot_data = data[independent_variable + [target_variable]]
     
             # # Tính tổng theo biến độc lập
