@@ -13,13 +13,15 @@ from sklearn.neighbors import KNeighborsClassifier
 import plotly.express as px
 # import plotly.graph_objects as go
 
-global target_variable
-global independent_variables
+# global target_variable
+# global independent_variables
 global data
 
 target_variable = None
 independent_variable = None
 data = None
+columns = None
+btn_choose_csv_file = None
 
 dataframe_info, linear_regression, logicstic_regression, knn = st.tabs(["Dataframe Info", "Linear Regression", "Logicstic Regression", "KNN"])
 
@@ -31,20 +33,20 @@ with st.sidebar:
         data = pd.read_csv(file)
         
         columns = list(data.columns)
-        target_variable = st.selectbox('Select target variable', columns)
-        independent_variable = st.multiselect('Select independent variable', columns)
         
-    # st.write("Select model")
-    # models = st.selectbox(
-    #     'Select model',
-    #     ('Linear Regression', 'Logicstic Regression')
-    # )
-
-    btn_choose_csv_file = st.button("Excution")
+        
+def choose_variable(key_prefix):
+    global target_variable, independent_variable, btn_choose_csv_file
+    if columns is not None:
+        target_variable = st.selectbox('Select target variable', columns, index=None, key=f'{key_prefix}_target')
+        independent_variable = st.multiselect('Select independent variable', columns, key=f'{key_prefix}_independent')
+        btn_choose_csv_file = st.button("Excution", key=f'{key_prefix}_btn')
 
 with st.container():
-    if btn_choose_csv_file:
-        with dataframe_info:
+    with dataframe_info:
+        choose_variable('dataframe')
+        
+        if btn_choose_csv_file:
             original_data = data
             st.dataframe(original_data)
             
@@ -70,80 +72,69 @@ with st.container():
                 )
                 
                 st.data_editor(data)
-        
-        # if btn_rename_col:
-        #     st.data_editor(data)
 
-        if btn_clean_data:
-            cleaned_data = original_data.dropna()
-            st.dataframe(cleaned_data)
-
-            # plot_data = data[independent_variable + [target_variable]]
-    
-            # # Tính tổng theo biến độc lập
-            # grouped_data = plot_data.groupby(independent_variable)[target_variable].sum().reset_index()
-            
-            # # Vẽ biểu đồ tròn
-            # fig = px.pie(grouped_data, names=target_variable, values=target_variable, title='Pie Chart')
-            
-            # # Hiển thị biểu đồ
-            # st.plotly_chart(fig)
+            if btn_clean_data:
+                cleaned_data = original_data.dropna()
+                st.dataframe(cleaned_data)
             
         with linear_regression:
-            if len(independent_variable) == 1:
-                # st.scatter_chart(data[[independent_variable[0], target_variable]])
-                
-                model = LinearRegression()
-                X = data[independent_variable[0]].values.reshape(-1, 1)
-                y = data[target_variable].values
-                model.fit(X, y)
-                
-                fig, ax = plt.subplots()
-                sb.regplot(x=independent_variable[0], y=target_variable, data=data, scatter_kws={'alpha':0.5}, ax=ax)
-                st.pyplot(fig)
-                
-                st.write("Coefficient:", model.coef_)
-                st.write("Intercept:", model.intercept_)
-            elif len(independent_variable) == 2: 
-                # fig = plt.figure()
-                # ax = fig.add_subplot(111, projection='3d')
-                # ax.scatter(data[independent_variable[0]], data[independent_variable[1]], data[target_variable], c=data[target_variable], cmap='viridis')
-                
-                # ax.set_xlabel(independent_variable[0])
-                # ax.set_ylabel(independent_variable[1])
-                # ax.set_zlabel(target_variable)
-                
-                # plt.show()
-                # st.pyplot(fig)
-                
-                # Tạo mô hình hồi quy tuyến tính
-                model = LinearRegression()
-                X = data[independent_variable].values.reshape(-1, 2)
-                y = data[target_variable].values
-                model.fit(X, y)
-                
-                # Tính toán giá trị dự đoán từ mô hình
-                xx, yy = np.meshgrid(np.linspace(data[independent_variable[0]].min(), data[independent_variable[0]].max(), 100),
-                                    np.linspace(data[independent_variable[1]].min(), data[independent_variable[1]].max(), 100))
-                zz = model.predict(np.column_stack((xx.ravel(), yy.ravel())))
-                zz = zz.reshape(xx.shape)
-                
-                # Vẽ biểu đồ 3D
-                fig = plt.figure()
-                ax = fig.add_subplot(111, projection='3d')
-                ax.scatter(data[independent_variable[0]], data[independent_variable[1]], data[target_variable], c=data[target_variable], cmap='viridis')
-                ax.plot_surface(xx, yy, zz, alpha=0.5)  # Vẽ đường hồi quy
-                ax.set_xlabel(independent_variable[0])
-                ax.set_ylabel(independent_variable[1])
-                ax.set_zlabel(target_variable)
-                
-                # plt.show()
-                st.pyplot(fig)
-                
-                st.write("Coefficient:", model.coef_)
-                st.write("Intercept:", model.intercept_)
-            else:
-                st.warning("Target variable or Independent variable have not been selected.")
+            choose_variable('dataframe')
+        
+            if btn_choose_csv_file:
+                if len(independent_variable) == 1:
+                    # st.scatter_chart(data[[independent_variable[0], target_variable]])
+                    
+                    model = LinearRegression()
+                    X = data[independent_variable[0]].values.reshape(-1, 1)
+                    y = data[target_variable].values
+                    model.fit(X, y)
+                    
+                    fig, ax = plt.subplots()
+                    sb.regplot(x=independent_variable[0], y=target_variable, data=data, scatter_kws={'alpha':0.5}, ax=ax)
+                    st.pyplot(fig)
+                    
+                    st.write("Coefficient:", model.coef_)
+                    st.write("Intercept:", model.intercept_)
+                elif len(independent_variable) == 2: 
+                    # fig = plt.figure()
+                    # ax = fig.add_subplot(111, projection='3d')
+                    # ax.scatter(data[independent_variable[0]], data[independent_variable[1]], data[target_variable], c=data[target_variable], cmap='viridis')
+                    
+                    # ax.set_xlabel(independent_variable[0])
+                    # ax.set_ylabel(independent_variable[1])
+                    # ax.set_zlabel(target_variable)
+                    
+                    # plt.show()
+                    # st.pyplot(fig)
+                    
+                    # Tạo mô hình hồi quy tuyến tính
+                    model = LinearRegression()
+                    X = data[independent_variable].values.reshape(-1, 2)
+                    y = data[target_variable].values
+                    model.fit(X, y)
+                    
+                    # Tính toán giá trị dự đoán từ mô hình
+                    xx, yy = np.meshgrid(np.linspace(data[independent_variable[0]].min(), data[independent_variable[0]].max(), 100),
+                                        np.linspace(data[independent_variable[1]].min(), data[independent_variable[1]].max(), 100))
+                    zz = model.predict(np.column_stack((xx.ravel(), yy.ravel())))
+                    zz = zz.reshape(xx.shape)
+                    
+                    # Vẽ biểu đồ 3D
+                    fig = plt.figure()
+                    ax = fig.add_subplot(111, projection='3d')
+                    ax.scatter(data[independent_variable[0]], data[independent_variable[1]], data[target_variable], c=data[target_variable], cmap='viridis')
+                    ax.plot_surface(xx, yy, zz, alpha=0.5)  # Vẽ đường hồi quy
+                    ax.set_xlabel(independent_variable[0])
+                    ax.set_ylabel(independent_variable[1])
+                    ax.set_zlabel(target_variable)
+                    
+                    # plt.show()
+                    st.pyplot(fig)
+                    
+                    st.write("Coefficient:", model.coef_)
+                    st.write("Intercept:", model.intercept_)
+                else:
+                    st.warning("Target variable or Independent variable have not been selected.")
             
         with logicstic_regression:
             st.header("Logicstic Regression")
@@ -172,3 +163,4 @@ with st.container():
             # ax.set_ylabel('True Label')
             # ax.set_title('Confusion Matrix')
             # st.pyplot(fig)
+        
