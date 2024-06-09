@@ -3,6 +3,7 @@ import time
 import streamlit as st
 import pandas as pd
 from streamlit_option_menu import option_menu
+from DiagramPage import diagram_page
 
 def save_to_history(df):
     if 'df_history' not in st.session_state:
@@ -448,23 +449,6 @@ def information_page(df):
         with col11:
             if st.button("Save Data"):
                 save_data(st.session_state['df'], "data_clean.csv")
-
-                
-
-                
-                    
-
-def diagram_page():
-    st.title("Settings")
-    st.write("Welcome to the settings page!")
-    
-    submenu = st.selectbox("Select a setting", ["Profile", "Preferences", "Security"])
-    if submenu == "Profile":
-        st.write("This is the Profile section.")
-    elif submenu == "Preferences":
-        st.write("This is the Preferences section.")
-    elif submenu == "Security":
-        st.write("This is the Security section.")
 
 def main():
     df = st.session_state.get('df')
