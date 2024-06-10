@@ -6,7 +6,7 @@ from operation_info import change_null, change_type, del_null, drop_column, rena
 from operation_up import add_row, delete_row, filter_rows, prepare_mapping, combine_columns, format_columns, split_columns, update_row, merge_dataframes
 
 def information_page(df):
-    submenu = st.sidebar.selectbox("Select a section", ["Overview", "Details", "Statistics"])
+    submenu = st.sidebar.selectbox("Select a section", ["Overview", "Details"])
     
     if submenu == "Overview":
         dataframe_view, dataframe_info, column_detail, decription_info = st.tabs(["View Dataframe", "Dataframe Info", "Column Detail", "Decription Info"])
