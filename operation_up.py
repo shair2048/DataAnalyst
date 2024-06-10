@@ -4,16 +4,35 @@ import pandas as pd
 import streamlit as st
 from operation import save_to_history
 
-def split_columns(df, column, data_type, delimiter, date_part, operator, value, new_column_name):
-    print("Data type:", data_type)
-    print("Delimiter:", delimiter)
+def split_columns(df, column, data_type, delimiter, date_part, operator, value, new_column_name, direction, include_delimiter, add_char, add_position, add_target):
     try:
         save_to_history(df)
-        if data_type == "object" and delimiter is not None:
+        if data_type == "object":
             # Split column based on delimiter
             if new_column_name is None:
                 new_column_name = f"{column}_split"
-            df[new_column_name] = df[column].str.split(delimiter).str.get(0)
+            
+            if delimiter is not None:
+                if direction=="Left to right":
+                    if include_delimiter:
+                        df[new_column_name] = df[column].apply(lambda x: x.split(delimiter, 1)[0] + delimiter if delimiter in x else x)
+                    else:
+                        df[new_column_name] = df[column].apply(lambda x: x.split(delimiter, 1)[0] if delimiter in x else x)
+                else:
+                    if include_delimiter:
+                        df[new_column_name] = df[column].apply(lambda x: delimiter + x.split(delimiter)[-1] if delimiter in x else x)
+                    else:
+                        df[new_column_name] = df[column].apply(lambda x: x.split(delimiter)[-1] if delimiter in x else x)
+            else:
+                if add_position == 'start':
+                    df[new_column_name] = df[column].apply(lambda x: add_char + x)
+                elif add_position == 'end':
+                    df[new_column_name] = df[column].apply(lambda x: x + add_char)
+                elif add_position == 'before':
+                    df[new_column_name] = df[column].apply(lambda x: x.replace(add_target, add_char + add_target) if add_target in x else x)
+                elif add_position == 'after':
+                    df[new_column_name] = df[column].apply(lambda x: x.replace(add_target, add_target + add_char) if add_target in x else x)
+
         elif data_type == "datetime64[ns]" and date_part is not None:
             # Split datetime column based on date_part
             if new_column_name is None:
@@ -117,3 +136,62 @@ def format_columns(df, column, format_type, mapping=None, new_column_name=None):
     except Exception as e:
         st.error(f"Error formatting column '{column}': {e}")
     return df_copy
+
+def add_row(df, new_row_df, dataframe_placeholder):
+    try:
+        save_to_history(df)
+        new_row_series = pd.Series(new_row_df.iloc[0])
+        df = pd.concat([df, pd.DataFrame([new_row_series])], ignore_index=True)
+        st.session_state['df'] = df
+        st.success("Row added successfully!")
+        dataframe_placeholder.dataframe(df.tail(10))
+    except Exception as e:
+        st.error("Failed to add row")
+
+def delete_row(df, row_index, dataframe_placeholder):
+    try:
+        save_to_history(df)
+        df = df.drop(row_index).reset_index(drop=True)
+        st.session_state['df'] = df
+        st.success("Row deleted successfully!")
+        start_row = max(row_index - 5, 0)
+        end_row = min(row_index + 5, len(df))
+        dataframe_placeholder.dataframe(df.iloc[start_row:end_row])
+    except Exception as e:
+        st.error("Failed to delete row")
+
+def filter_rows(df, filter_column, filter_operator, filter_value, dataframe_placeholder):
+    try:
+        if df[filter_column].dtype in ["int64", "float64"]:
+            filter_value = float(filter_value)
+        else:
+            filter_value = str(filter_value)
+        
+        # Apply filter
+        if filter_operator == ">":
+            filtered_df = df[df[filter_column] > filter_value]
+        elif filter_operator == "<":
+            filtered_df = df[df[filter_column] < filter_value]
+        else:
+            raise ValueError("Unsupported filter operator")
+        
+        st.write(f"Filtered Dataframe based on {filter_column} {filter_operator} {filter_value}:")
+        dataframe_placeholder.dataframe(filtered_df)
+    except Exception as e:
+        st.error(f"Failed to filter rows: {e}")
+
+def update_row(df, row_index, edited_row, dataframe_placeholder):
+    try:
+        save_to_history(df)
+        df.iloc[row_index] = edited_row.iloc[0]
+        st.session_state['df'] = df
+        st.success("Row updated successfully!")
+        start_row = max(row_index - 5, 0)
+        end_row = min(row_index + 5, len(df))
+        dataframe_placeholder.dataframe(df.iloc[start_row:end_row])
+    except Exception as e:
+        st.error("Failed to update row")
+        
+def merge_dataframes(df1, df2, left_on, right_on):
+    merged_df = pd.merge(df1, df2, how='inner', left_on=left_on, right_on=right_on)
+    return merged_df

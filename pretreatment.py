@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 from operation import undo, clean_data, save_data, search_dataframe
 from operation_info import change_null, change_type, del_null, drop_column, rename_column, unique_column
-from operation_up import prepare_mapping, combine_columns, format_columns, split_columns
+from operation_up import add_row, delete_row, filter_rows, prepare_mapping, combine_columns, format_columns, split_columns, update_row, merge_dataframes
 
 def information_page(df):
     submenu = st.sidebar.selectbox("Select a section", ["Overview", "Details", "Statistics"])
@@ -21,7 +21,6 @@ def information_page(df):
                     search_term = st.text_input("Search Term")
                     search_column = st.selectbox("Search Column", ["All Columns"] + df.columns.tolist())
                 display_type = st.selectbox("Display Type", ["Head", "Tail", "Sample"])
-                display_count = st.number_input("Number of Rows", min_value=1, value=10)
                 
             with col1:
                 if display_search and search_term:
@@ -33,11 +32,11 @@ def information_page(df):
                 else:
                     result_df = df
                 if display_type == "Head":
-                    st.write(result_df.head(display_count))
+                    st.write(result_df.head(len(result_df)))
                 elif display_type == "Tail":
-                    st.write(result_df.tail(display_count))
+                    st.write(result_df.tail(len(result_df)))
                 elif display_type == "Sample":
-                    st.write(result_df.sample(display_count))
+                    st.write(result_df.sample(len(result_df)))
             
         with dataframe_info:
             st.write("Dataframe Information")
@@ -48,14 +47,7 @@ def information_page(df):
                 new_type = st.selectbox("New Type", ["int64", "float64", "object", "datetime64[ns]"])
                 new_type_button = st.button("Change Type")
                 del_null_button = st.button("Delete Null")
-                data_type = df[col_column1].dtype
-                if data_type == "object" or data_type == "datetime64[ns]":
-                    get_null = st.selectbox("Change Value", ["Most Value", "Least Value", "New Value"])
-                else:
-                    get_null = st.selectbox("Change Value", ["Max Value", "Mean Value", "Min Value", "New Value"])
-                if get_null == "New Value":
-                    change_null_text = st.text_input("New Value")
-                change_null_button = st.button("Change Null")
+                change_null_text = None
 
             with col3:       
                 info_df = pd.DataFrame({
@@ -65,6 +57,23 @@ def information_page(df):
                     "Unique Values": df.nunique(),
                 })
                 st.dataframe(info_df)
+                
+            not_null_checkbox = st.checkbox("Not Null")
+            selected_values = []
+            if not_null_checkbox:
+                unique_values = df[col_column1].dropna().unique()
+                selected_values = st.multiselect("Select Values to Replace", unique_values)
+                change_null_text = st.text_input("New Value for Selected")
+            else:
+                data_type = df[col_column1].dtype
+                if data_type == "object" or data_type == "datetime64[ns]":
+                    get_null = st.selectbox("Change Value", ["Most Value", "Least Value", "New Value"])
+                else:
+                    get_null = st.selectbox("Change Value", ["Max Value", "Mean Value", "Min Value", "New Value"])
+                if get_null == "New Value":
+                    change_null_text = st.text_input("New Value")
+                
+            change_null_button = st.button("Change Value")
                 
         with column_detail:
             st.write("Column Detail")
@@ -108,7 +117,10 @@ def information_page(df):
         if del_null_button:
             del_null(df, col_column1)
         if change_null_button:
-            change_null(df, col_column1, get_null, change_null_text)
+            if not_null_checkbox:
+                change_null(df, col_column1, "Replace Values", change_null_text, selected_values)
+            else:
+                change_null(df, col_column1, get_null, change_null_text)
         if drop_col_button:
             drop_column(df, col_column2)
         if rename_col_button and new_column_name:
@@ -119,7 +131,7 @@ def information_page(df):
             clean_data(df)
                 
     elif submenu == "Details":
-        dataframe_view, split_column, combine_column, format_column = st.tabs(["View Dataframe", "Split Column", "Combine Column", "Format Column"])
+        dataframe_view, split_column, combine_column, format_column, row_operations, merge_file = st.tabs(["View Dataframe", "Split Column", "Combine Column", "Format Column", "Row Operations", "Merge File"])
         
         with dataframe_view:
             st.write("View Dataframe")
@@ -131,7 +143,6 @@ def information_page(df):
                     search_term = st.text_input("Search Term")
                     search_column = st.selectbox("Search Column", ["All Columns"] + df.columns.tolist())
                 display_type = st.selectbox("Display Type", ["Head", "Tail", "Sample"])
-                display_count = st.number_input("Number of Rows", min_value=1, value=10)
             with col1:
                 if display_search and search_term:
                     if search_column == "All Columns":
@@ -142,11 +153,11 @@ def information_page(df):
                 else:
                     result_df = df
                 if display_type == "Head":
-                    st.write(result_df.head(display_count))
+                    st.write(result_df.head(len(result_df)))
                 elif display_type == "Tail":
-                    st.write(result_df.tail(display_count))
+                    st.write(result_df.tail(len(result_df)))
                 elif display_type == "Sample":
-                    st.write(result_df.sample(display_count))
+                    st.write(result_df.sample(len(result_df)))
                     
         with split_column:
             st.write("Split Column")
@@ -159,9 +170,24 @@ def information_page(df):
             date_part = None
             operator = None
             value = None
+            include_delimiter = False
+            direction = "Left to right"
+            add_char = None
+            add_position = None
+            add_target = None
+
             
             if data_type3 == "object":
-                delimiter = st.text_input("Delimiter")
+                action = st.radio("Choose action:", ("split", "add"))
+                if action == "split":
+                    delimiter = st.text_input("Delimiter")
+                    direction = st.radio("Split direction:", ("Left to right", "Right to left"))
+                    include_delimiter = st.checkbox("Include delimiter in new column")
+                else:
+                    add_char = st.text_input("Character to add")
+                    add_position = st.radio("Position to add character:", ("start", "end", "before", "after"))
+                    if add_position in ["before", "after"]:
+                        add_target = st.text_input("Target substring")    
             elif data_type3 == "datetime64[ns]":
                 date_part = st.selectbox("Date Part", ["day", "month", "year"])
             else:
@@ -200,10 +226,82 @@ def information_page(df):
             
             format_button = st.button("Format Column")
             
+        with row_operations:
+            st.write("Row Operations")
             
+            # Initialize button variables to False
+            add_row_button = delete_row_button = filter_button = update_row_button = False
+            st.write("Dataframe Preview:")
+            dataframe_placeholder = st.empty()
+            dataframe_placeholder.dataframe(result_df)
+            
+            operation = st.selectbox("Choose Operation", ["Add Row", "Delete Row", "Filter Rows", "Update Row"])
+                
+            if operation == "Add Row":
+                st.write("Enter new row data:")
+                new_row_data = {column: "" for column in df.columns}
+                new_row_df = pd.DataFrame(new_row_data, index=[0])
+                new_row_df = st.data_editor(new_row_df, key="new_row_editor")
+                add_row_button = st.button("Add Row")
+                    
+            elif operation == "Delete Row":
+                row_index = st.number_input("Row Index", min_value=0, max_value=len(df)-1, key="delete_row_index")
+                if row_index is not None:
+                    st.dataframe(df.iloc[[row_index]])
+                delete_row_button = st.button("Delete Row")
+            
+            elif operation == "Filter Rows":
+                filter_column = st.selectbox("Filter Column", df.columns, key="filter_column")
+                filter_operator = st.selectbox("Operator", [">", "<"], key="filter_operator")
+                filter_value = st.text_input("Filter Value", key="filter_value")
+                filter_button = st.button("Filter Rows")
+                
+            elif operation == "Update Row":
+                row_index = st.number_input("Row Index", min_value=0, max_value=len(df)-1, key="update_row_index")
+                if row_index is not None:
+                    row_data = df.iloc[[row_index]].copy()
+                    st.write("Editing Row:")
+                    edited_row = st.data_editor(row_data, key="edit_row")
+                update_row_button = st.button("Update Row")
 
-        
-        # Undo, Clean Data, Save buttons
+            if add_row_button:
+                add_row(df, new_row_df, dataframe_placeholder)
+
+            if delete_row_button:
+                delete_row(df, row_index, dataframe_placeholder)
+
+            if filter_button:
+                filter_rows(df, filter_column, filter_operator, filter_value, dataframe_placeholder)
+
+            if update_row_button:
+                update_row(df, row_index, edited_row, dataframe_placeholder)
+
+        with merge_file:
+            st.title("Merge Files")
+
+            st.write("Upload the first file:")
+            uploaded_file1 = st.file_uploader("Choose a CSV file", type=["csv"], key="file_uploader1")
+
+            st.write("Upload the second file:")
+            uploaded_file2 = st.file_uploader("Choose a CSV file", type=["csv"], key="file_uploader2")
+
+            if uploaded_file1 and uploaded_file2:
+                df1 = pd.read_csv(uploaded_file1)  # Read uploaded file into a DataFrame
+                df2 = pd.read_csv(uploaded_file2)  # Read uploaded file into a DataFrame
+                
+                st.write(df1.head())
+                st.write(df2.head())
+
+                left_on = st.selectbox("Choose column from Dataframe 1", df1.columns)
+                right_on = st.selectbox("Choose column from Dataframe 2", df2.columns)
+
+                merge_button = st.button("Merge Dataframes")
+
+                if merge_button:
+                    merged_df = merge_dataframes(df1, df2, left_on, right_on)
+                    st.subheader("Merged Dataframe")
+                    st.write(merged_df)
+
 
         col8, col9, col10, col11 = st.columns([3 ,1 , 1, 1])
         with col8:
@@ -217,7 +315,7 @@ def information_page(df):
                 save_data(df, "data_clean.csv")
                 
         if separate_button:
-            split_columns(df, col_column3, data_type3, delimiter, date_part, operator, value, new_column_name3)
+            split_columns(df, col_column3, data_type3, delimiter, date_part, operator, value, new_column_name3, direction, include_delimiter, add_char, add_position, add_target)
         if combine_button:
             combine_columns(df, col_column4, operation, delimiter1, new_column_name4)
         if format_button:

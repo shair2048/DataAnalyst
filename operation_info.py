@@ -26,7 +26,8 @@ def del_null(df, column_name):
     except Exception as e:
         st.error(f"Error deleting null values in column '{column_name}': {e}")
         
-def change_null(df, column_name, strategy, new_value=None):
+        
+def change_null(df, column_name, strategy, new_value=None, selected_values=None):
     try:
         save_to_history(df)
         if strategy == "Most Value":
@@ -48,13 +49,15 @@ def change_null(df, column_name, strategy, new_value=None):
             if df[column_name].dtype == "datetime64[ns]":
                 new_value = pd.to_datetime(new_value)
             df[column_name].fillna(new_value, inplace=True)
+        elif strategy == "Replace Values":
+            df[column_name].replace(selected_values, new_value, inplace=True)
             
         st.session_state['df'] = df  # Update session state
-        st.success(f"Null values in column '{column_name}' have been changed to '{strategy if strategy != 'New Value' else new_value}'.")
+        st.success(f"Values in column '{column_name}' have been changed to '{new_value if strategy == 'Replace Values' else strategy}'.")
         time.sleep(1)
         st.experimental_rerun()  # Reload the tab
     except Exception as e:
-        st.error(f"Error changing null values in column '{column_name}': {e}")
+        st.error(f"Error changing values in column '{column_name}': {e}")
         
 def unique_column(df, column_name):
     unique_values = df[column_name].unique()
