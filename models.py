@@ -32,7 +32,7 @@ def choose_variable(key_prefix, columns):
     else:
         st.write("columns is None")
 
-def choose_diagram(df):
+def choose_model(df):
     data = df
     columns = list(data.columns)
     linear_regression, logicstic_regression, knn = st.tabs(["Linear Regression", "Logicstic Regression", "KNN"])

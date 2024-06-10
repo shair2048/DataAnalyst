@@ -3,7 +3,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from operation import uploadfile
 from pretreatment import information_page
-from diagram import choose_diagram
+from models import choose_model
 
 def main():
     global columns
@@ -17,14 +17,14 @@ def main():
             st.experimental_rerun()
 
     with st.sidebar:
-        selected = option_menu("Data Analyst", ["CSV Information", 'Diagram'], 
-            icons=['house', 'gear'], menu_icon="cast", default_index=0)
+        selected = option_menu("Data Analyst", ["File Information", 'Models'], 
+                               icons=['file-earmark', 'bar-chart'], menu_icon="activity", default_index=0)
+
         
-    if selected == 'CSV Information' and df is not None:
+    if selected == 'File Information' and df is not None:
         information_page(df)
-    elif selected == 'Diagram' and df is not None:
-        # st.sidebar.write(df)
-        choose_diagram(df)
+    elif selected == 'Models' and df is not None:
+        choose_model(df)
     else:
         st.write('Unknown option')
 
