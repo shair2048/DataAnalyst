@@ -1,4 +1,3 @@
-# main.py
 import streamlit as st
 from streamlit_option_menu import option_menu
 from operation import uploadfile
@@ -25,8 +24,8 @@ def main():
         information_page(df)
     elif selected == 'Models' and df is not None:
         choose_model(df)
-    else:
-        st.write('Unknown option')
+    # else:
+    #     st.write('Unknown option')
 
 if __name__ == "__main__":
     main()

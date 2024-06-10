@@ -7,9 +7,11 @@ import seaborn as sb
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
 import plotly.express as px
 # import plotly.graph_objects as go
 
@@ -39,12 +41,12 @@ def choose_model(df):
     
     with linear_regression:
         choose_variable('linear_regression', columns)
+        model = LinearRegression()
 
         if btn_choose_csv_file:
             if len(independent_variable) == 1:
                 # st.scatter_chart(data[[independent_variable[0], target_variable]])
                 
-                model = LinearRegression()
                 X = data[independent_variable[0]].values.reshape(-1, 1)
                 y = data[target_variable].values
                 model.fit(X, y)
@@ -55,20 +57,8 @@ def choose_model(df):
                 
                 st.write("Coefficient:", model.coef_)
                 st.write("Intercept:", model.intercept_)
-            elif len(independent_variable) == 2: 
-                # fig = plt.figure()
-                # ax = fig.add_subplot(111, projection='3d')
-                # ax.scatter(data[independent_variable[0]], data[independent_variable[1]], data[target_variable], c=data[target_variable], cmap='viridis')
-                
-                # ax.set_xlabel(independent_variable[0])
-                # ax.set_ylabel(independent_variable[1])
-                # ax.set_zlabel(target_variable)
-                
-                # plt.show()
-                # st.pyplot(fig)
-                
+            elif len(independent_variable) == 2:
                 # Tạo mô hình hồi quy tuyến tính
-                model = LinearRegression()
                 X = data[independent_variable].values.reshape(-1, 2)
                 y = data[target_variable].values
                 model.fit(X, y)
@@ -97,30 +87,76 @@ def choose_model(df):
                 st.warning("Target variable or Independent variable have not been selected.")
         
     with logicstic_regression:
-        st.header("Logicstic Regression")
+        choose_variable('logicstic_regression', columns)
+        # model = LogisticRegression()
+        
+        # if btn_choose_csv_file:
+        #     # if len(independent_variable) == 2:
+        #         X = df[independent_variable].values
+        #         y = df[target_variable].values
+        #         # Huấn luyện mô hình
+        #         model.fit(X, y)
+
+        #         # Vẽ biểu đồ
+        #         plt.figure(figsize=(10, 6))
+
+        #         # Vẽ các điểm dữ liệu
+        #         plt.scatter(df[independent_variable[0]], df[independent_variable[1]], c=df[target_variable], cmap='viridis', s=50, edgecolors='k', label='Data points')
+
+        #         # Vẽ ranh giới quyết định của mô hình
+        #         x_min, x_max = df[independent_variable[0]].min() - 1, df[independent_variable[0]].max() + 1
+        #         y_min, y_max = df[independent_variable[1]].min() - 1, df[independent_variable[1]].max() + 1
+        #         xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100))
+        #         Z = model.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+        #         plt.contour(xx, yy, Z, levels=[0.5], linewidths=2, colors='red', label='Decision boundary')
+
+        #         plt.xlabel(independent_variable[0])
+        #         plt.ylabel(independent_variable[1])
+        #         plt.title('Logistic Regression Decision Boundary')
+        #         plt.legend()
+        #         plt.colorbar()
+
+        #         # Hiển thị biểu đồ
+        #         st.pyplot(plt)
+        
+        
         
     with knn:
-        st.header("KNN")
-        # X_train, X_test, y_train, y_test = train_test_split(data, target_variable, test_size=0.2, random_state=42)
+        choose_variable('knn', columns)
         
-        # knn = KNeighborsClassifier(n_neighbors=3) # K=3
+        if btn_choose_csv_file:
+            X = data[independent_variable].values
+            y = data[target_variable].values
+            
+            if y.dtype == 'object':
+                label_encoder = LabelEncoder()
+                y_train_transformed = label_encoder.fit_transform(y)
+            elif y.dtype == 'float64':
+                y_train_transformed = (y >= 0.5).astype(int)
+            else:
+                y_train_transformed = y.astype(int)
+            
+            X_train, X_test, y_train, y_test = train_test_split(X, y_train_transformed, test_size=0.2, random_state=42)
+            
+            # Chuẩn hóa dữ liệu
+            scaler = StandardScaler()
+            X_train_scaled = scaler.fit_transform(X_train)
+            X_test_scaled = scaler.transform(X_test)
 
-        # # Huấn luyện mô hình
-        # knn.fit(X_train, y_train)
-        
-        # scaler = StandardScaler()
-        # scaler.fit(X_train)
-        # X_test_scaled = scaler.transform(X_test)  # Scaled test data
-        # y_pred = model.predict(X_test_scaled)     # Predicted labels
-        
-        # # Tính toán ma trận nhầm lẫn (confusion matrix)
-        # conf_matrix = confusion_matrix(y_test, y_pred)
-        
-        # # Vẽ heatmap
-        # fig, ax = plt.subplots()
-        # sb.heatmap(conf_matrix, annot=True, cmap='coolwarm', fmt='d')
-        # ax.set_xlabel('Predicted Label')
-        # ax.set_ylabel('True Label')
-        # ax.set_title('Confusion Matrix')
-        # st.pyplot(fig)
-        
+            knn = KNeighborsClassifier(n_neighbors=3) # k=5
+            knn.fit(X_train_scaled, y_train)
+
+            y_pred = knn.predict(X_test_scaled)
+            
+            # Calculate confusion matrix
+            conf_matrix = confusion_matrix(y_test, y_pred)
+            
+            plt.figure(figsize=(8, 6))
+            sb.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", cbar=False)
+            plt.title("Confusion Matrix")
+            plt.xlabel("Predicted Labels")
+            plt.ylabel("True Labels")
+            st.pyplot(plt)
+            
+            accuracy = accuracy_score(y_test, y_pred)
+            st.write('Accuracy: ', accuracy)
