@@ -5,14 +5,13 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sb
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.metrics import mean_squared_error, confusion_matrix, accuracy_score, roc_curve, auc
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
 import plotly.express as px
+import graphviz
 # import plotly.graph_objects as go
 
 # global target_variable
@@ -23,24 +22,37 @@ target_variable = None
 independent_variable = None
 data = None
 columns = None
+values = None
 btn_choose_csv_file = None
 
-def choose_variable(key_prefix, columns):
+def choose_variable(key_prefix, values):
     global target_variable, independent_variable, btn_choose_csv_file
-    if columns is not None:
-        target_variable = st.selectbox('Select target variable', columns, index=None, key=f'{key_prefix}_target')
-        independent_variable = st.multiselect('Select independent variable', columns, key=f'{key_prefix}_independent')
+    if values is not None:
+        target_variable = st.selectbox('Select target variable', values, index=None, key=f'{key_prefix}_target')
+        independent_variable = st.multiselect('Select independent variable', values, key=f'{key_prefix}_independent')
         btn_choose_csv_file = st.button("Excution", key=f'{key_prefix}_btn')
-    else:
-        st.write("columns is None")
+    # else:
+    #     st.write("values is None")
 
 def choose_model(df):
     data = df
-    columns = list(data.columns)
-    linear_regression, logicstic_regression, knn = st.tabs(["Linear Regression", "Logicstic Regression", "KNN"])
+    # columns = list(data.columns)
+    
+    # label_encoder = LabelEncoder()
+    # columns_transformed = label_encoder.fit_transform(data.columns)
+    values = data.select_dtypes(include=['int64', 'float64']).columns
+    # values = [col for col in values if col != 'id']
+    linear_regression, logicstic_regression, knn, decision_tree = st.tabs(["Linear Regression", "Logicstic Regression", "KNN", "Decision Tree"])
+    # data = data.apply(pd.to_numeric, errors='coerce')
+    # info_df = pd.DataFrame({
+    #                 "Data Type": data.dtypes,
+    #                 "NaN Count": data.isna().sum()
+    #             })
+    # st.dataframe(columns_transformed, data.dtypes)
+    # st.write(columns_transformed)
     
     with linear_regression:
-        choose_variable('linear_regression', columns)
+        choose_variable('linear_regression', values)
         model = LinearRegression()
 
         if btn_choose_csv_file:
@@ -87,42 +99,45 @@ def choose_model(df):
                 st.warning("Target variable or Independent variable have not been selected.")
         
     with logicstic_regression:
-        choose_variable('logicstic_regression', columns)
-        # model = LogisticRegression()
+        choose_variable('logicstic_regression', values)
+        model = LogisticRegression()
         
-        # if btn_choose_csv_file:
-        #     # if len(independent_variable) == 2:
-        #         X = df[independent_variable].values
-        #         y = df[target_variable].values
-        #         # Huấn luyện mô hình
-        #         model.fit(X, y)
+        if btn_choose_csv_file:
+            X = data[independent_variable].values
+            y = data[target_variable].values
+            
+            if y.dtype == 'object':
+                label_encoder = LabelEncoder()
+                y_train_transformed = label_encoder.fit_transform(y)
+            elif y.dtype == 'float64':
+                y_train_transformed = (y >= 0.5).astype(int)
+            else:
+                y_train_transformed = y.astype(int)
+            
+            X_train, X_test, y_train, y_test = train_test_split(X, y_train_transformed, test_size=0.3, random_state=0)
+            model.fit(X_train, y_train)
 
-        #         # Vẽ biểu đồ
-        #         plt.figure(figsize=(10, 6))
+            # Dự đoán xác suất cho tập kiểm tra
+            y_pred_proba = model.predict_proba(X_test)[:, 1]
 
-        #         # Vẽ các điểm dữ liệu
-        #         plt.scatter(df[independent_variable[0]], df[independent_variable[1]], c=df[target_variable], cmap='viridis', s=50, edgecolors='k', label='Data points')
+            # Tính toán đường cong ROC
+            fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
+            roc_auc = auc(fpr, tpr)
 
-        #         # Vẽ ranh giới quyết định của mô hình
-        #         x_min, x_max = df[independent_variable[0]].min() - 1, df[independent_variable[0]].max() + 1
-        #         y_min, y_max = df[independent_variable[1]].min() - 1, df[independent_variable[1]].max() + 1
-        #         xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100))
-        #         Z = model.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
-        #         plt.contour(xx, yy, Z, levels=[0.5], linewidths=2, colors='red', label='Decision boundary')
-
-        #         plt.xlabel(independent_variable[0])
-        #         plt.ylabel(independent_variable[1])
-        #         plt.title('Logistic Regression Decision Boundary')
-        #         plt.legend()
-        #         plt.colorbar()
-
-        #         # Hiển thị biểu đồ
-        #         st.pyplot(plt)
-        
-        
+            # Vẽ biểu đồ ROC
+            plt.figure()
+            plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+            plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            plt.xlim([0.0, 1.0])
+            plt.ylim([0.0, 1.05])
+            plt.xlabel('False Positive Rate')
+            plt.ylabel('True Positive Rate')
+            plt.title('Receiver Operating Characteristic')
+            plt.legend(loc="lower right")
+            st.pyplot(plt)
         
     with knn:
-        choose_variable('knn', columns)
+        choose_variable('knn', values)
         
         if btn_choose_csv_file:
             X = data[independent_variable].values
@@ -160,3 +175,35 @@ def choose_model(df):
             
             accuracy = accuracy_score(y_test, y_pred)
             st.write('Accuracy: ', accuracy)
+            
+    with decision_tree:
+        choose_variable('decision_tree', values)
+        
+        # if btn_choose_csv_file:
+        #     X = data[independent_variable].values
+        #     y = data[target_variable].values
+            
+        #     if y.dtype == 'object':
+        #         label_encoder = LabelEncoder()
+        #         y_train_transformed = label_encoder.fit_transform(y)
+        #     elif y.dtype == 'float64':
+        #         y_train_transformed = (y >= 0.5).astype(int)
+        #     else:
+        #         y_train_transformed = y.astype(int)
+            
+        #     X_train, X_test, y_train, y_test = train_test_split(X, y_train_transformed, test_size=0.3, random_state=0)
+
+        #     # Xây dựng mô hình Decision Tree và huấn luyện
+        #     clf = DecisionTreeClassifier()
+        #     clf.fit(X_train, y_train)
+
+        #     # Dự đoán và đánh giá mô hình
+        #     y_pred = clf.predict(X_test)
+        #     accuracy = accuracy_score(y_test, y_pred)
+        #     st.write('Accuracy:', accuracy)
+
+        #     # Hiển thị cây quyết định (tùy chọn)
+        #     st.subheader('Cây quyết định:')
+        #     dot_data = export_graphviz(clf, out_file=None, feature_names=independent_variable, class_names=clf.classes_, filled=True, rounded=True, special_characters=True)
+        #     graph = graphviz.Source(dot_data)
+        #     st.graphviz_chart(graph)
