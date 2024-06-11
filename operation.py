@@ -60,6 +60,7 @@ def clean_data(df):
                 mean_value = df[column].mean()
                 df[column].fillna(mean_value, inplace=True)
     
+    # Gán lại df đã được xử lý vào st.session_state['df']
     st.session_state['df'] = df
     st.success("Data cleaned successfully.")
     time.sleep(1)
