@@ -20,24 +20,37 @@ target_variable = None
 independent_variable = None
 data = None
 columns = None
+values = None
 btn_choose_csv_file = None
 
-def choose_variable(key_prefix, columns):
+def choose_variable(key_prefix, values):
     global target_variable, independent_variable, btn_choose_csv_file
-    if columns is not None:
-        target_variable = st.selectbox('Select target variable', columns, index=None, key=f'{key_prefix}_target')
-        independent_variable = st.multiselect('Select independent variable', columns, key=f'{key_prefix}_independent')
+    if values is not None:
+        target_variable = st.selectbox('Select target variable', values, index=None, key=f'{key_prefix}_target')
+        independent_variable = st.multiselect('Select independent variable', values, key=f'{key_prefix}_independent')
         btn_choose_csv_file = st.button("Excution", key=f'{key_prefix}_btn')
-    else:
-        st.write("columns is None")
+    # else:
+    #     st.write("values is None")
 
 def choose_model(df):
     data = df
-    columns = list(data.columns)
+    # columns = list(data.columns)
+    
+    # label_encoder = LabelEncoder()
+    # columns_transformed = label_encoder.fit_transform(data.columns)
+    values = data.select_dtypes(include=['int64', 'float64']).columns
+    # values = [col for col in values if col != 'id']
     linear_regression, logicstic_regression, knn = st.tabs(["Linear Regression", "Logicstic Regression", "KNN"])
+    # data = data.apply(pd.to_numeric, errors='coerce')
+    # info_df = pd.DataFrame({
+    #                 "Data Type": data.dtypes,
+    #                 "NaN Count": data.isna().sum()
+    #             })
+    # st.dataframe(columns_transformed, data.dtypes)
+    # st.write(columns_transformed)
     
     with linear_regression:
-        choose_variable('linear_regression', columns)
+        choose_variable('linear_regression', values)
         model = LinearRegression()
 
         if btn_choose_csv_file:
@@ -84,7 +97,7 @@ def choose_model(df):
                 st.warning("Target variable or Independent variable have not been selected.")
         
     with logicstic_regression:
-        choose_variable('logicstic_regression', columns)
+        choose_variable('logicstic_regression', values)
         model = LogisticRegression()
         
         if btn_choose_csv_file:
@@ -122,7 +135,7 @@ def choose_model(df):
             st.pyplot(plt)
         
     with knn:
-        choose_variable('knn', columns)
+        choose_variable('knn', values)
         
         if btn_choose_csv_file:
             X = data[independent_variable].values
