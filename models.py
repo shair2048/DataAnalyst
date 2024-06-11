@@ -25,12 +25,21 @@ columns = None
 values = None
 btn_choose_csv_file = None
 
-def choose_variable(key_prefix, values):
+def choose_variable(key_prefix, data):
     global target_variable, independent_variable, btn_choose_csv_file
-    if values is not None:
-        target_variable = st.selectbox('Select target variable', values, index=None, key=f'{key_prefix}_target')
-        independent_variable = st.multiselect('Select independent variable', values, key=f'{key_prefix}_independent')
-        btn_choose_csv_file = st.button("Excution", key=f'{key_prefix}_btn')
+    if data is not None:
+        target_variable = st.selectbox('Select target variable', data.columns, index=None, key=f'{key_prefix}_target')
+        independent_variable = st.multiselect('Select independent variable', data.columns, key=f'{key_prefix}_independent')
+        btn_choose_csv_file = st.button("Execution", key=f'{key_prefix}_btn')
+        le = LabelEncoder()
+
+        if independent_variable:
+            for column in independent_variable:
+                if data[column].dtype == "object":
+                    data[column] = le.fit_transform(data[column])
+            if data[target_variable].dtype == "object":
+                data[target_variable] = le.fit_transform(data[target_variable])
+                
     # else:
     #     st.write("values is None")
 
@@ -40,7 +49,9 @@ def choose_model(df):
     
     # label_encoder = LabelEncoder()
     # columns_transformed = label_encoder.fit_transform(data.columns)
-    values = data.select_dtypes(include=['int64', 'float64']).columns
+    values = data
+    
+
     # values = [col for col in values if col != 'id']
     linear_regression, logicstic_regression, knn, decision_tree = st.tabs(["Linear Regression", "Logicstic Regression", "KNN", "Decision Tree"])
     # data = data.apply(pd.to_numeric, errors='coerce')
@@ -57,7 +68,7 @@ def choose_model(df):
 
         if btn_choose_csv_file:
             if len(independent_variable) == 1:
-                # st.scatter_chart(data[[independent_variable[0], target_variable]])
+                # st.scatter_chart(data[[indepcendent_variable[0], target_variable]])
                 
                 X = data[independent_variable[0]].values.reshape(-1, 1)
                 y = data[target_variable].values
