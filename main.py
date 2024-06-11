@@ -4,7 +4,6 @@ from streamlit_option_menu import option_menu
 from operation import uploadfile
 from pretreatment import information_page
 from models import choose_model
-from test import execute_model
 
 image_path = "ima.png"
 def get_base64_image(image_path):
@@ -55,9 +54,6 @@ def main():
         information_page(df)
     elif selected == 'Models' and df is not None:
         choose_model(df)
-    elif selected == 'Model' and df is not None:
-        stored_df = st.session_state['df']
-        execute_model(stored_df)
 
 if __name__ == "__main__":
     main()
