@@ -2,11 +2,11 @@ import time
 import pandas as pd
 import streamlit as st
 from operation import undo, clean_data, save_data, search_dataframe
-from operation_info import change_null, change_type, del_null, drop_column, rename_column, unique_column
+from operation_info import change_null, change_type, plot_chart, del_null, drop_column, rename_column, unique_column
 from operation_up import add_row, delete_row, filter_rows, prepare_mapping, combine_columns, format_columns, split_columns, update_row, merge_dataframes
 
 def information_page(df):
-    submenu = st.sidebar.selectbox("Select a section", ["Overview", "Details"])
+    submenu = st.sidebar.selectbox("Select a section", ["Overview", "Details", "Visualizations"])
     
     if submenu == "Overview":
         dataframe_view, dataframe_info, column_detail, decription_info = st.tabs(["View Dataframe", "Dataframe Info", "Column Detail", "Decription Info"])
@@ -324,3 +324,14 @@ def information_page(df):
             undo()
         if clean_button:
             clean_data(df)
+    
+    elif submenu == "Visualizations":
+        st.write("Visualizations")
+        
+        selected_column = st.sidebar.selectbox('Select a column', df.columns)
+
+        # Sidebar: Select chart type
+        chart_type = st.sidebar.selectbox('Select chart type', ['Bar Chart', 'Line Chart', 'Scatter Plot', 'Pie Chart'])
+
+        # Plot chart based on user selection
+        plot_chart(df, selected_column, chart_type)
