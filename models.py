@@ -9,7 +9,9 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_squared_error, confusion_matrix, accuracy_score, roc_curve, auc
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
 import plotly.express as px
+import graphviz
 # import plotly.graph_objects as go
 
 # global target_variable
@@ -40,7 +42,7 @@ def choose_model(df):
     # columns_transformed = label_encoder.fit_transform(data.columns)
     values = data.select_dtypes(include=['int64', 'float64']).columns
     # values = [col for col in values if col != 'id']
-    linear_regression, logicstic_regression, knn = st.tabs(["Linear Regression", "Logicstic Regression", "KNN"])
+    linear_regression, logicstic_regression, knn, decision_tree = st.tabs(["Linear Regression", "Logicstic Regression", "KNN", "Decision Tree"])
     # data = data.apply(pd.to_numeric, errors='coerce')
     # info_df = pd.DataFrame({
     #                 "Data Type": data.dtypes,
@@ -173,3 +175,35 @@ def choose_model(df):
             
             accuracy = accuracy_score(y_test, y_pred)
             st.write('Accuracy: ', accuracy)
+            
+    with decision_tree:
+        choose_variable('decision_tree', values)
+        
+        # if btn_choose_csv_file:
+        #     X = data[independent_variable].values
+        #     y = data[target_variable].values
+            
+        #     if y.dtype == 'object':
+        #         label_encoder = LabelEncoder()
+        #         y_train_transformed = label_encoder.fit_transform(y)
+        #     elif y.dtype == 'float64':
+        #         y_train_transformed = (y >= 0.5).astype(int)
+        #     else:
+        #         y_train_transformed = y.astype(int)
+            
+        #     X_train, X_test, y_train, y_test = train_test_split(X, y_train_transformed, test_size=0.3, random_state=0)
+
+        #     # Xây dựng mô hình Decision Tree và huấn luyện
+        #     clf = DecisionTreeClassifier()
+        #     clf.fit(X_train, y_train)
+
+        #     # Dự đoán và đánh giá mô hình
+        #     y_pred = clf.predict(X_test)
+        #     accuracy = accuracy_score(y_test, y_pred)
+        #     st.write('Accuracy:', accuracy)
+
+        #     # Hiển thị cây quyết định (tùy chọn)
+        #     st.subheader('Cây quyết định:')
+        #     dot_data = export_graphviz(clf, out_file=None, feature_names=independent_variable, class_names=clf.classes_, filled=True, rounded=True, special_characters=True)
+        #     graph = graphviz.Source(dot_data)
+        #     st.graphviz_chart(graph)
