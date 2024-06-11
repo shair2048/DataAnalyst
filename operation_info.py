@@ -1,8 +1,10 @@
 import copy
 import time
+from matplotlib import pyplot as plt
 import pandas as pd
 import streamlit as st
 from operation import save_to_history
+import seaborn as sb
 
 def change_type(df, column_name, new_type):
     try:
@@ -87,3 +89,32 @@ def rename_column(df, old_name, new_name):
         st.experimental_rerun()  # Reload the tab
     except Exception as e:
         st.error(f"Error renaming column '{old_name}': {e}")
+        
+def plot_chart(data, selected_column, chart_type):
+    if chart_type == 'Bar Chart':
+        st.write("## Bar Chart")
+        bar_chart_data = data[selected_column].value_counts()
+        st.bar_chart(bar_chart_data)
+
+    elif chart_type == 'Line Chart':
+        st.write("## Line Chart")
+        # Assuming the selected column is numeric for this example
+        st.line_chart(data[selected_column])
+
+    elif chart_type == 'Scatter Plot':
+        st.write("## Scatter Plot")
+        # Assuming there's another numeric column to use as the y-axis
+        y_column = st.sidebar.selectbox('Select Y-axis column', data.columns)
+        if selected_column != y_column:
+            fig, ax = plt.subplots()
+            sb.scatterplot(data=data, x=selected_column, y=y_column, ax=ax)
+            st.pyplot(fig)
+        else:
+            st.write("Please select a different column for Y-axis.")
+
+    elif chart_type == 'Pie Chart':
+        st.write("## Pie Chart")
+        pie_chart_data = data[selected_column].value_counts()
+        fig, ax = plt.subplots()
+        ax.pie(pie_chart_data, labels=pie_chart_data.index, autopct='%1.1f%%')
+        st.pyplot(fig)
