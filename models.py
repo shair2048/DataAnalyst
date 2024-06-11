@@ -38,6 +38,21 @@ def choose_variable(key_prefix, data):
                     data[column] = le.fit_transform(data[column])
             if data[target_variable].dtype == "object":
                 data[target_variable] = le.fit_transform(data[target_variable])
+                
+# def plot_decision_boundaries(X, y, classifier, title):
+#     x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+#     x2_min, x2_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+#     xx1, xx2 = np.meshgrid(np.arange(x1_min, x1_max, 0.01),
+#                            np.arange(x2_min, x2_max, 0.01))
+#     Z = classifier.predict(np.array([xx1.ravel(), xx2.ravel()]).T)
+#     Z = Z.reshape(xx1.shape)
+#     plt.contourf(xx1, xx2, Z, alpha=0.3)
+#     plt.scatter(X[:, 0], X[:, 1], c=y, edgecolor='k', s=20)
+#     plt.title(title)
+#     plt.xlabel('X1')
+#     plt.ylabel('X2')
+#     plt.show()
+    
 
 def choose_model(df):
     global data, target_variable, independent_variable, btn_choose_csv_file
@@ -189,30 +204,20 @@ def choose_model(df):
         choose_variable('decision_tree', data)
         
         # if btn_choose_csv_file:
-        #     X = data[independent_variable].values
-        #     y = data[target_variable].values
+        #     sample_data = data.sample(frac=0.1, random_state=42)
+        #     X = sample_data[independent_variable].values
+        #     y = sample_data[target_variable].values
             
-        #     if y.dtype == 'object':
-        #         label_encoder = LabelEncoder()
-        #         y_train_transformed = label_encoder.fit_transform(y)
-        #     elif y.dtype == 'float64':
-        #         y_train_transformed = (y >= 0.5).astype(int)
-        #     else:
-        #         y_train_transformed = y.astype(int)
-            
-        #     X_train, X_test, y_train, y_test = train_test_split(X, y_train_transformed, test_size=0.3, random_state=0)
-
+        #     # Huấn luyện mô hình cây quyết định
         #     clf = DecisionTreeClassifier()
-        #     clf.fit(X_train, y_train)
-
-        #     y_pred = clf.predict(X_test)
-        #     accuracy = accuracy_score(y_test, y_pred)
-        #     st.write('Accuracy:', accuracy)
-
-        #     st.subheader('Cây quyết định:')
-        #     dot_data = export_graphviz(clf, out_file=None, feature_names=independent_variable, class_names=clf.classes_, filled=True, rounded=True, special_characters=True)
-        #     graph = graphviz.Source(dot_data)
-        #     st.graphviz_chart(graph)
+        #     clf.fit(X, y)
+            
+        #     # Vẽ biên giới quyết định
+        #     if len(independent_variable) == 2:
+        #         plot_decision_boundaries(X, y, clf, "Biên giới Phân loại của Cây Quyết định")
+        #     else:
+        #         st.write("Vui lòng chọn đúng 2 biến độc lập để vẽ biểu đồ.")
+                
     with random_forest:
         choose_variable('random_forest', data)
         
