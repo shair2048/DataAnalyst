@@ -34,7 +34,6 @@ st.markdown(
 )
 
 def main():
-    
     global columns
     df = st.session_state.get('df')
     if df is None:
@@ -46,7 +45,7 @@ def main():
             st.experimental_rerun()
 
     with st.sidebar:
-        selected = option_menu("Data Analyst", ["File Information", 'Models', 'Model'], 
+        selected = option_menu("Data Analyst", ["File Information", 'Models'], 
                                icons=['file-earmark', 'bar-chart'], menu_icon="activity", default_index=0)
 
         
