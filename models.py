@@ -40,33 +40,6 @@ def choose_variable(key_prefix, data):
                     data[column] = le.fit_transform(data[column])
             if data[target_variable].dtype == "object":
                 data[target_variable] = le.fit_transform(data[target_variable])
-                
-# def plot_decision_boundaries(X, y, classifier, title):
-#     x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-#     x2_min, x2_max = X[:, 1].min() - 1, X[:, 1].max() + 1
-#     xx1, xx2 = np.meshgrid(np.arange(x1_min, x1_max, 0.01),
-#                            np.arange(x2_min, x2_max, 0.01))
-#     Z = classifier.predict(np.array([xx1.ravel(), xx2.ravel()]).T)
-#     Z = Z.reshape(xx1.shape)
-#     plt.contourf(xx1, xx2, Z, alpha=0.3)
-#     plt.scatter(X[:, 0], X[:, 1], c=y, edgecolor='k', s=20)
-#     plt.title(title)
-#     plt.xlabel('X1')
-#     plt.ylabel('X2')
-#     plt.show()
-
-# X, y = make_moons(n_samples=500, noise=0.30, random_state=42)
-# X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    
-# def draw_meshgrid():
-#     a = np.arange(start=X[:, 0].min() - 1, stop=X[:, 0].max() + 1, step=0.01)
-#     b = np.arange(start=X[:, 1].min() - 1, stop=X[:, 1].max() + 1, step=0.01)
-
-#     XX, YY = np.meshgrid(a, b)
-
-#     input_array = np.array([XX.ravel(), YY.ravel()]).T
-
-#     return XX, YY, input_array
 
 def choose_model(df):
     global data, target_variable, independent_variable, btn_choose_csv_file
@@ -217,71 +190,26 @@ def choose_model(df):
     with decision_tree:
         choose_variable('decision_tree', data)
         
-        # if btn_choose_csv_file:
-        #     # Xác định các đặc trưng (features) và biến mục tiêu (target)
-        #     X = data[independent_variable].values
-        #     y = data[target_variable].values
-            
-        #     st.write(X)
-
-        #     # Encode nhãn của biến mục tiêu nếu cần
-        #     le = LabelEncoder()
-        #     y = le.fit_transform(y)
-
-        #     clf = tree.DecisionTreeClassifier(random_state=2021)
-        #     clf = clf.fit(X, y)
-
-        #     fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=[21, 6])
-
-        #     colors = ['crimson', 'dodgerblue']
-        #     ax1.plot(X[:, 0][y == 0], X[:, 1][y == 0], "o", color=colors[0])
-        #     ax1.plot(X[:, 0][y == 1], X[:, 1][y == 1], "^", color=colors[1])
-        #     xx, yy = np.meshgrid(np.linspace(X[:, 0].min(), X[:, 0].max(), 100), np.linspace(X[:, 1].min(), X[:, 1].max(), 100))
-        #     pred = clf.predict(np.c_[(xx.ravel(), yy.ravel())])
-        #     ax1.contourf(xx, yy, pred.reshape(xx.shape), cmap=ListedColormap(colors), alpha=0.25)
-
-        #     # ax2.set_prop_cycle(mpl.cycler(color=colors)) # doesn't seem to work
-
-        #     artists = tree.plot_tree(clf, feature_names=["X", "y"], class_names=colors,
-        #                             filled=True, rounded=True, ax=ax2)
-        #     for artist, impurity, value in zip(artists, clf.tree_.impurity, clf.tree_.value):
-        #         # let the max value decide the color; whiten the color depending on impurity (gini)
-        #         r, g, b = to_rgb(colors[np.argmax(value)])
-        #         f = impurity * 2 # for N colors: f = impurity * N/(N-1) if N>1 else 0
-        #         artist.get_bbox_patch().set_facecolor((f + (1-f)*r, f + (1-f)*g, f + (1-f)*b))
-        #         artist.get_bbox_patch().set_edgecolor('black')
-
-        #     plt.tight_layout()
-        #     # plt.show()
-        #     st.pyplot(plt)
-        
         if btn_choose_csv_file:
             if len(independent_variable) == 1:
                 X = data[independent_variable].values
                 y = data[target_variable].values
                 
-                regressor = DecisionTreeRegressor(random_state = 0)  
-    
-                # fit the regressor with X and Y data 
+                regressor = DecisionTreeRegressor(random_state = 0)
                 regressor.fit(X, y)
                 
                 X_grid = np.arange(min(X), max(X), 0.01) 
                 X_grid = X_grid.reshape((len(X_grid), 1))  
                 
-                # scatter plot for original data 
                 plt.scatter(X, y, color = 'red') 
-                
-                # plot predicted data 
-                plt.plot(X_grid, regressor.predict(X_grid), color = 'blue')
-                
-                # specify title 
+                plt.plot(X_grid, regressor.predict(X_grid), color = 'green')
+
                 plt.title('Decision Tree Regression')
                 
                 plt.xlabel(independent_variable[0])
                 plt.ylabel(target_variable)
                 # plt.export_graphviz(regressor, out_file ='tree.dot') 
-                
-                # show the plot
+
                 st.pyplot(plt)
                 
     with random_forest:
