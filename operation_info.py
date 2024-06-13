@@ -90,22 +90,30 @@ def rename_column(df, old_name, new_name):
     except Exception as e:
         st.error(f"Error renaming column '{old_name}': {e}")
         
-def plot_chart(data, selected_column, chart_type):
+def plot_chart(data, selected_column, chart_type, y_column=None):
+    st.write(f"## {chart_type}")
+
     if chart_type == 'Bar Chart':
-        st.write("## Bar Chart")
-        bar_chart_data = data[selected_column].value_counts()
-        st.bar_chart(bar_chart_data)
+        fig, ax = plt.subplots()
+        if y_column and selected_column != y_column:
+            data_grouped = data.groupby([selected_column, y_column]).size().unstack(fill_value=0)
+            data_grouped = data_grouped.loc[:, data_grouped.sum().nlargest(10).index]  # Lấy 10 giá trị cao nhất
+            data_grouped.plot(kind='bar', ax=ax)
+        else:
+            bar_chart_data = data[selected_column].value_counts().nlargest(10)  # Lấy 10 giá trị cao nhất
+            bar_chart_data.plot(kind='bar', ax=ax)
+        st.pyplot(fig)
 
     elif chart_type == 'Line Chart':
-        st.write("## Line Chart")
-        # Assuming the selected column is numeric for this example
-        st.line_chart(data[selected_column])
+        fig, ax = plt.subplots()
+        if y_column and selected_column != y_column:
+            data.plot(x=selected_column, y=y_column, ax=ax)
+        else:
+            ax.plot(data[selected_column])
+        st.pyplot(fig)
 
     elif chart_type == 'Scatter Plot':
-        st.write("## Scatter Plot")
-        # Assuming there's another numeric column to use as the y-axis
-        y_column = st.sidebar.selectbox('Select Y-axis column', data.columns)
-        if selected_column != y_column:
+        if y_column and selected_column != y_column:
             fig, ax = plt.subplots()
             sb.scatterplot(data=data, x=selected_column, y=y_column, ax=ax)
             st.pyplot(fig)
@@ -113,8 +121,15 @@ def plot_chart(data, selected_column, chart_type):
             st.write("Please select a different column for Y-axis.")
 
     elif chart_type == 'Pie Chart':
-        st.write("## Pie Chart")
-        pie_chart_data = data[selected_column].value_counts()
         fig, ax = plt.subplots()
+        pie_chart_data = data[selected_column].value_counts().nlargest(10)  # Lấy 10 giá trị cao nhất
         ax.pie(pie_chart_data, labels=pie_chart_data.index, autopct='%1.1f%%')
+        st.pyplot(fig)
+
+    elif chart_type == 'Histogram':
+        fig, ax = plt.subplots()
+        if y_column and selected_column != y_column:
+            sb.histplot(data=data, x=selected_column, hue=y_column, multiple="stack", ax=ax)
+        else:
+            sb.histplot(data=data, x=selected_column, ax=ax)
         st.pyplot(fig)

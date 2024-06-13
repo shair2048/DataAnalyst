@@ -328,10 +328,25 @@ def information_page(df):
     elif submenu == "Visualizations":
         st.write("Visualizations")
         
-        selected_column = st.sidebar.selectbox('Select a column', df.columns)
+        # Filter columns where not all unique values are equal to the total number of rows
+        valid_columns = [col for col in df.columns if df[col].nunique() < len(df)]
 
+        selected_column = st.sidebar.selectbox('Select a column', valid_columns, index=0)
+        
         # Sidebar: Select chart type
-        chart_type = st.sidebar.selectbox('Select chart type', ['Bar Chart', 'Line Chart', 'Scatter Plot', 'Pie Chart'])
+        chart_type = st.sidebar.selectbox('Select chart type', [
+            'Bar Chart', 
+            'Line Chart', 
+            'Scatter Plot', 
+            'Pie Chart', 
+            'Histogram'
+        ])
+
+        y_column = None
+        if chart_type in ['Bar Chart', 'Line Chart', 'Scatter Plot', 'Histogram']:
+            y_column = st.sidebar.selectbox('Select Y-axis column (optional)', ['None'] + valid_columns)
+            if y_column == 'None':
+                y_column = None
 
         # Plot chart based on user selection
-        plot_chart(df, selected_column, chart_type)
+        plot_chart(df, selected_column, chart_type, y_column)
