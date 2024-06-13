@@ -9,13 +9,15 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_squared_error, confusion_matrix, accuracy_score, roc_curve, auc, classification_report
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier, export_graphviz
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_graphviz, plot_tree
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import label_binarize
 import plotly.express as px
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import tree
+from sklearn.datasets import make_moons
 import graphviz
+from matplotlib.colors import ListedColormap, to_rgb
 # import plotly.graph_objects as go
 
 global data
@@ -52,7 +54,19 @@ def choose_variable(key_prefix, data):
 #     plt.xlabel('X1')
 #     plt.ylabel('X2')
 #     plt.show()
+
+# X, y = make_moons(n_samples=500, noise=0.30, random_state=42)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
     
+# def draw_meshgrid():
+#     a = np.arange(start=X[:, 0].min() - 1, stop=X[:, 0].max() + 1, step=0.01)
+#     b = np.arange(start=X[:, 1].min() - 1, stop=X[:, 1].max() + 1, step=0.01)
+
+#     XX, YY = np.meshgrid(a, b)
+
+#     input_array = np.array([XX.ravel(), YY.ravel()]).T
+
+#     return XX, YY, input_array
 
 def choose_model(df):
     global data, target_variable, independent_variable, btn_choose_csv_file
@@ -204,19 +218,71 @@ def choose_model(df):
         choose_variable('decision_tree', data)
         
         # if btn_choose_csv_file:
-        #     sample_data = data.sample(frac=0.1, random_state=42)
-        #     X = sample_data[independent_variable].values
-        #     y = sample_data[target_variable].values
+        #     # Xác định các đặc trưng (features) và biến mục tiêu (target)
+        #     X = data[independent_variable].values
+        #     y = data[target_variable].values
             
-        #     # Huấn luyện mô hình cây quyết định
-        #     clf = DecisionTreeClassifier()
-        #     clf.fit(X, y)
-            
-        #     # Vẽ biên giới quyết định
-        #     if len(independent_variable) == 2:
-        #         plot_decision_boundaries(X, y, clf, "Biên giới Phân loại của Cây Quyết định")
-        #     else:
-        #         st.write("Vui lòng chọn đúng 2 biến độc lập để vẽ biểu đồ.")
+        #     st.write(X)
+
+        #     # Encode nhãn của biến mục tiêu nếu cần
+        #     le = LabelEncoder()
+        #     y = le.fit_transform(y)
+
+        #     clf = tree.DecisionTreeClassifier(random_state=2021)
+        #     clf = clf.fit(X, y)
+
+        #     fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=[21, 6])
+
+        #     colors = ['crimson', 'dodgerblue']
+        #     ax1.plot(X[:, 0][y == 0], X[:, 1][y == 0], "o", color=colors[0])
+        #     ax1.plot(X[:, 0][y == 1], X[:, 1][y == 1], "^", color=colors[1])
+        #     xx, yy = np.meshgrid(np.linspace(X[:, 0].min(), X[:, 0].max(), 100), np.linspace(X[:, 1].min(), X[:, 1].max(), 100))
+        #     pred = clf.predict(np.c_[(xx.ravel(), yy.ravel())])
+        #     ax1.contourf(xx, yy, pred.reshape(xx.shape), cmap=ListedColormap(colors), alpha=0.25)
+
+        #     # ax2.set_prop_cycle(mpl.cycler(color=colors)) # doesn't seem to work
+
+        #     artists = tree.plot_tree(clf, feature_names=["X", "y"], class_names=colors,
+        #                             filled=True, rounded=True, ax=ax2)
+        #     for artist, impurity, value in zip(artists, clf.tree_.impurity, clf.tree_.value):
+        #         # let the max value decide the color; whiten the color depending on impurity (gini)
+        #         r, g, b = to_rgb(colors[np.argmax(value)])
+        #         f = impurity * 2 # for N colors: f = impurity * N/(N-1) if N>1 else 0
+        #         artist.get_bbox_patch().set_facecolor((f + (1-f)*r, f + (1-f)*g, f + (1-f)*b))
+        #         artist.get_bbox_patch().set_edgecolor('black')
+
+        #     plt.tight_layout()
+        #     # plt.show()
+        #     st.pyplot(plt)
+        
+        if btn_choose_csv_file:
+            if len(independent_variable) == 1:
+                X = data[independent_variable].values
+                y = data[target_variable].values
+                
+                regressor = DecisionTreeRegressor(random_state = 0)  
+    
+                # fit the regressor with X and Y data 
+                regressor.fit(X, y)
+                
+                X_grid = np.arange(min(X), max(X), 0.01) 
+                X_grid = X_grid.reshape((len(X_grid), 1))  
+                
+                # scatter plot for original data 
+                plt.scatter(X, y, color = 'red') 
+                
+                # plot predicted data 
+                plt.plot(X_grid, regressor.predict(X_grid), color = 'blue')
+                
+                # specify title 
+                plt.title('Decision Tree Regression')
+                
+                plt.xlabel(independent_variable[0])
+                plt.ylabel(target_variable)
+                # plt.export_graphviz(regressor, out_file ='tree.dot') 
+                
+                # show the plot
+                st.pyplot(plt)
                 
     with random_forest:
         choose_variable('random_forest', data)
