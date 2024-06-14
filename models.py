@@ -231,7 +231,7 @@ def choose_model(df):
             SEED = 42
             X_train, X_test, y_train, y_test = train_test_split(X, y_train_transformed, test_size=0.2, random_state=SEED)
 
-            rfc_ = RandomForestClassifier(n_estimators=100, 
+            rfc_ = RandomForestClassifier(n_estimators=5, 
                              max_depth=4,
                              random_state=SEED)
             rfc_.fit(X_train, y_train)
@@ -241,15 +241,14 @@ def choose_model(df):
             st.write("Accuracy:", accuracy)
             
             
-            best_estimator_index = np.argmax(rfc_.feature_importances_)
-            # Get the best estimator
-            best_estimator = rfc_.estimators_[best_estimator_index]
-            # Convert class names to strings
             class_names_str = [str(c) for c in np.unique(y)]
-            # Plot the best decision tree
-            fig, ax = plt.subplots(figsize=(12, 6))
-            tree.plot_tree(best_estimator, feature_names=independent_variable, class_names=class_names_str, filled=True, ax=ax)
-            st.pyplot(fig) 
+
+            # Plot and display all decision trees in the RandomForestClassifier
+            for idx, estimator in enumerate(rfc_.estimators_):
+                fig, ax = plt.subplots(figsize=(12, 6))
+                plot_tree(estimator, feature_names=independent_variable, class_names=class_names_str, filled=True, ax=ax)
+                st.pyplot(fig)
+                plt.close(fig)
 
             # Calculate confusion matrix
             cm = confusion_matrix(y_test, y_pred)

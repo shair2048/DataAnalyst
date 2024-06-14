@@ -24,7 +24,6 @@ st.markdown(
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 50px;
     }}
     .css-1v3fvcr {{
         background-color: rgba(255, 255, 255, 0.8);
