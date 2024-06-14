@@ -1,4 +1,5 @@
 import time
+from matplotlib import pyplot as plt
 import pandas as pd
 import streamlit as st
 from operation import undo, clean_data, save_data, search_dataframe
@@ -9,7 +10,7 @@ def information_page(df):
     submenu = st.sidebar.selectbox("Select a section", ["Overview", "Details", "Visualizations"])
     
     if submenu == "Overview":
-        dataframe_view, dataframe_info, column_detail, decription_info = st.tabs(["View Dataframe", "Dataframe Info", "Column Detail", "Decription Info"])
+        dataframe_view, dataframe_info, column_detail, decription_info, recomment = st.tabs(["View Dataframe", "Dataframe Info", "Column Detail", "Decription Info", "Recomment"])
         
         with dataframe_view:
             st.write("View Dataframe")
@@ -99,6 +100,37 @@ def information_page(df):
         with decription_info:        
             st.write("Description Information")
             st.write(df.describe())
+            
+        with recomment:
+
+            # Selectbox for object (categorical) variable
+            object_cols = df.select_dtypes(include='object').columns.tolist()
+            object_var = st.selectbox('Select a categorical variable', object_cols)
+
+            # Selectbox for numerical variable
+            num_cols = df.select_dtypes(include='number').columns.tolist()
+            num_var = st.selectbox('Select a numerical variable', num_cols)
+
+            # Grouping data
+            grouped_data = df.groupby(object_var)[num_var].mean().reset_index()
+            grouped_data['count'] = df.groupby(object_var)[num_var].count().values
+
+            # Sorting the grouped data and selecting the top 10 by count
+            top_grouped_data = grouped_data.sort_values(by='count', ascending=False).head(10)
+
+            # Display the top grouped data
+            st.write("Top 10 Grouped Data:")
+            st.dataframe(top_grouped_data)
+
+            # Plotting
+            fig, ax = plt.subplots()
+            top_grouped_data.plot(kind='bar', x=object_var, y='count', ax=ax)
+            plt.title(f'Top 10 Counts of {num_var} by {object_var}')
+            plt.xlabel(object_var)
+            plt.ylabel('Count')
+
+            # Display the plot
+            st.pyplot(fig)
         
         # Undo, Clean Data, Save buttons
         col8, col9, col10, col11 = st.columns([3 ,1 , 1, 1])
