@@ -258,6 +258,4 @@ def choose_model(df):
             ax.set_title('Confusion Matrix')
             ax.set_xlabel('Predicted labels')
             ax.set_ylabel('True labels')
-
-            # Display the plot directly in Streamlit
             st.pyplot(fig)
